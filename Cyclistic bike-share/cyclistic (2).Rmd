@@ -1,0 +1,177 @@
+---
+title: "Cyclistic"
+author: "Amira"
+date: "November 28, 2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## leveraging Cyclistic bike-share Success
+
+This is the case study, for Google data analytics Certificate, Cyclistic, a bike-share company in Chicago features more than 5,800 bicycles and 600 docking stations offering reclining bikes, hand tricycles, and cargo bikes, making bike-share more inclusive to people with disabilities and riders who can’t use a standard two-wheeled bike.
+
+* 8% of riders use the assistive options
+* 30% use them to commute to work each day
+* Lily Moreno: The director of marketing and your manager, believes the company’s future success depends on maximizing the number of annual memberships
+* Customers who purchase single-ride or full-day passes are referred to as **casual ** riders
+* Customers who purchase annual memberships are Cyclistic **members**
+* pricing plans: single-ride passes, full-day passes, and annual memberships.
+
+Moreno believes there is a very good chance to convert casual riders into members.
+Three questions will guide the future marketing program:
+
+
+1.How do annual members and casual riders use Cyclistic bikes differently?
+
+
+2.Why would casual riders buy Cyclistic annual memberships?
+
+
+3.How can Cyclistic use digital media to influence casual riders to become members?
+
+
+##$ Importing libraries:
+```{r }
+library(tidyverse)  #helps wrangle data
+library(lubridate)  #helps wrangle date attributes
+library(ggplot2)  #helps visualize data
+library(skimr)
+```
+
+## Loading Dataset and exploring its Variables 
+
+```{r loading dataset}
+df<- read.csv("D:/Downloads/Google DA Course/Case Study/Case-Study-1/Data/Cyclist_2020.csv")
+head(df)
+```
+ * SO this data is for the Year 2020 (12 month starting from January 2020 to December 2020)
+```{r}
+str(df)
+```
+
+```{r}
+summary(df)
+```
+
+```{r}
+skim_without_charts(df)
+```
+
+
+## Making a copy of the data & Cleaning it:
+
+* Make Acopy of the original Data frame
+* Change the type of started_at, ended_at Columns to datetime
+* Filter/Select Data to exclude start_lat, start_lng, end_lat & end_lng (containing missing values)
+* Calculate "Ride Length " Column
+* Calculate “day_of_week ”Column
+* There are some rides where tripduration shows up as negative, including several hundred rides where Cyclistic took bikes out of circulation for Quality Control reasons, We will want to delete these rides.
+```{r}
+trips <- df%>%
+  select(-c('start_lat','start_lng', 'end_lat', 'end_lng'))
+```
+```{r}
+head(trips)
+```
+
+```{r} 
+distinct(trips)
+```
+
+### Add columns that list the date, month, day, and year of each ride
+
+```{r}
+trips$date <- as.Date(trips$started_at) #The default format is yyyy-mm-dd
+trips$month <- format(as.Date(trips$date), "%m")
+trips$day <- format(as.Date(trips$date), "%d")
+trips$year <- format(as.Date(trips$date), "%Y")
+trips$day_of_week <- format(as.Date(trips$date), "%A")
+
+```
+
+
+Test
+```{r}
+head(trips)
+```
+## change started_at and ended_at columns into datetime
+
+```{r}
+trips$started_at <- as_datetime(trips$started_at)
+trips$ended_at <- as_datetime(trips$ended_at)
+trips$ride_length <- difftime(trips$ended_at , trips$started_at)
+```
+
+```{r}
+head(trips)
+
+```
+
+
+```{r}
+str(trips)
+```
+```{r}
+trips$ride_length <- as.numeric(trips$ride_length)
+is.numeric(trips$ride_length)
+```
+### trim df to exclude -ve rides, and trips starting at HQ QR
+
+```{r}
+ggplot(trips) + 
+  geom_boxplot(mapping = aes(x = ride_length))
+
+```
+### create a new version of the data frame with the filtered values 
+```{r}
+trips_cleaned <- trips[!(trips$start_station_name == "HQ QR"|trips$ride_length <= 0),]
+```
+
+```{r}
+dim(trips_cleaned)
+```
+```{r}
+summary(trips_cleaned$ride_length)
+```
+```{r}
+trips_cleaned$ride_length_minutes <- trips_cleaned$ride_length / 60
+```
+```{r}
+summary(trips_cleaned$ride_length_minutes)
+```
+
+
+```{r}
+aggregate(trips_cleaned$ride_length_minutes ~ trips_cleaned$member_casual, FUN = mean)
+
+```
+### Compare members and casual users
+
+```{r}
+aggregate(trips_cleaned$ride_length_minutes ~ trips_cleaned$member_casual, FUN = median)
+aggregate(trips_cleaned$ride_length_minutes ~ trips_cleaned$member_casual, FUN = max)
+aggregate(trips_cleaned$ride_length_minutes ~ trips_cleaned$member_casual, FUN = min)
+
+```
+
+# Compare the average ride time by each day for members vs casual users
+
+```{r}
+aggregate(trips_cleaned$ride_length_minutes ~ trips_cleaned$member_casual + trips_cleaned$day_of_week ,FUN = mean)
+```
+# ordering the days of the week
+
+```{r}
+trips_cleaned$day_of_week <- ordered(trips_cleaned$day_of_week, levels=c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"))
+
+
+```
+
+```{r}
+aggregate(trips_cleaned$ride_length_minutes ~ trips_cleaned$member_casual + trips_cleaned$day_of_week ,FUN = mean)
+
+```
+
