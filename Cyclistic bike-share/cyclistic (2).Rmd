@@ -2,7 +2,9 @@
 title: "Cyclistic"
 author: "Amira"
 date: "November 28, 2021"
-output: html_document
+output:
+  html_document: default
+  pdf_document: default
 ---
 
 ```{r setup, include=FALSE}
@@ -34,7 +36,7 @@ Three questions will guide the future marketing program:
 
 
 ##$ Importing libraries:
-```{r }
+```{r Importing libraries, echo=FALSE}
 library(tidyverse)  #helps wrangle data
 library(lubridate)  #helps wrangle date attributes
 library(ggplot2)  #helps visualize data
@@ -77,8 +79,10 @@ trips <- df%>%
 head(trips)
 ```
 
-```{r} 
-distinct(trips)
+Checking for Distinct/Duplictes
+```{r, echo=FALSE} 
+trips <- distinct(trips)
+
 ```
 
 ### Add columns that list the date, month, day, and year of each ride
@@ -104,7 +108,7 @@ trips$started_at <- as_datetime(trips$started_at)
 trips$ended_at <- as_datetime(trips$ended_at)
 trips$ride_length <- difftime(trips$ended_at , trips$started_at)
 ```
-
+## Test
 ```{r}
 head(trips)
 
@@ -114,17 +118,22 @@ head(trips)
 ```{r}
 str(trips)
 ```
+
+
 ```{r}
 trips$ride_length <- as.numeric(trips$ride_length)
 is.numeric(trips$ride_length)
 ```
-### trim df to exclude -ve rides, and trips starting at HQ QR
+
+
+
 
 ```{r}
 ggplot(trips) + 
   geom_boxplot(mapping = aes(x = ride_length))
 
 ```
+### trim df to exclude -ve rides, and trips starting at HQ QR
 ### create a new version of the data frame with the filtered values 
 ```{r}
 trips_cleaned <- trips[!(trips$start_station_name == "HQ QR"|trips$ride_length <= 0),]
@@ -148,6 +157,7 @@ summary(trips_cleaned$ride_length_minutes)
 aggregate(trips_cleaned$ride_length_minutes ~ trips_cleaned$member_casual, FUN = mean)
 
 ```
+* Casual Clients average ride length in minutes is +3 times more than the members
 ### Compare members and casual users
 
 ```{r}
@@ -157,11 +167,6 @@ aggregate(trips_cleaned$ride_length_minutes ~ trips_cleaned$member_casual, FUN =
 
 ```
 
-# Compare the average ride time by each day for members vs casual users
-
-```{r}
-aggregate(trips_cleaned$ride_length_minutes ~ trips_cleaned$member_casual + trips_cleaned$day_of_week ,FUN = mean)
-```
 # ordering the days of the week
 
 ```{r}
@@ -170,8 +175,209 @@ trips_cleaned$day_of_week <- ordered(trips_cleaned$day_of_week, levels=c("Sunday
 
 ```
 
+# Compare the average ride time by each day for members vs casual users
 ```{r}
 aggregate(trips_cleaned$ride_length_minutes ~ trips_cleaned$member_casual + trips_cleaned$day_of_week ,FUN = mean)
 
+```
+```{r}
+ggplot(trips_cleaned) +
+  geom_bar(mapping = aes(x = member_casual))
+```
+
+```{r}
+trips_cleaned %>%
+  group_by(member_casual) %>%
+             summarise(Count = n())
+```
+
+```{r}
+grouped <- trips_cleaned %>% 
+  group_by(member_casual) %>% 
+  count() %>% 
+  ungroup() %>% 
+  mutate(per=`n`/sum(`n`)) %>% 
+  arrange(desc(member_casual))
+grouped$label <- scales::percent(grouped$per)
+ggplot(grouped)+
+  geom_bar(aes(x="", y=per, fill=member_casual), stat="identity", width = 1)+
+  coord_polar("y", start=0)+
+  theme_void()+
+  geom_text(aes(x=1, y = cumsum(per) - per/2, label=label))
+
+```
+### visualizing the number of rides by Average duration in Minutes throughout the week
+```{r}
+trips_cleaned %>%
+  mutate(weekday = wday(started_at, label = TRUE)) %>%
+  group_by(member_casual, weekday) %>%
+  summarise(numer_of_rides = n(), average_duration = mean(ride_length_minutes)) %>%
+  arrange(member_casual, weekday) %>%
+  ggplot(aes(x= weekday, y = average_duration, fill = member_casual)) +
+  geom_col(position = 'dodge')
+  
+```
+### visualizing the number of rides by rider type throughout the week
+```{r}
+trips_cleaned %>% 
+  mutate(weekday = wday(started_at, label = TRUE)) %>% 
+  group_by(member_casual, weekday) %>% 
+  summarise(number_of_rides = n()
+            ,average_duration = mean(ride_length)) %>% 
+  arrange(member_casual, weekday)  %>% 
+  ggplot(aes(x = weekday, y = number_of_rides, fill = member_casual)) +
+  geom_col(position = "dodge")
+
+```
+
+```{r}
+trips_cleaned %>%
+  group_by(member_casual, month) %>%
+  summarise(number_of_rides = n()) %>%
+  arrange(member_casual, month)  %>% 
+  ggplot(aes(x = month, y = number_of_rides, fill = member_casual)) +
+  geom_col(position = "dodge")
+```
+
+```{r}
+counts <- aggregate(trips_cleaned$ride_length_minutes ~ trips_cleaned$member_casual + trips_cleaned$day_of_week, FUN = mean)
+```
+
+```{r}
+head(counts)
+```
+
+```{r}
+write.csv(counts, "D:/Downloads/counts.csv")
+```
+
+
+```{r}
+head(df)
+```
+### Creating another version of the original df, to analyze stations and geography
+```{r}
+trips_v2 <- df
+trips_v2$date <- as.Date(trips_v2$started_at) #The default format is yyyy-mm-dd
+trips_v2$month <- format(as.Date(trips_v2$date), "%m")
+trips_v2$day <- format(as.Date(trips_v2$date), "%d")
+trips_v2$day_of_week <- format(as.Date(trips_v2$date), "%A")
+
+```
+```{r}
+head(trips_v2)
+```
+
+### fixing some of the datatypes
+
+```{r}
+trips_v2$started_at <- as_datetime(trips_v2$started_at)
+trips_v2$ended_at <- as_datetime(trips_v2$ended_at)
+```
+
+```{r}
+trips_v2$rideable_type <- as.character(trips_v2$rideable_type)
+trips_v2$start_station_name <- as.character(trips_v2$start_station_name)
+trips_v2$start_station_id <- as.character(trips_v2$start_station_id)
+trips_v2$end_station_name <- as.character(trips_v2$end_station_name)
+trips_v2$end_station_id <- as.character(trips_v2$end_station_id)
+trips_v2$member_casual <- as.character(trips_v2$member_casual)
+
+```
+## Adding trip duration in minutes
+```{r}
+trips_v2$ride_length <- difftime(trips_v2$ended_at, trips_v2$started_at)
+trips_v2$ride_length <- as.numeric(trips_v2$ride_length)
+```
+
+```{r}
+trips_v2$ride_length_minutes <- trips_v2$ride_length / 60
+```
+```{r}
+trips_v2$day_of_week <- ordered(trips_v2$day_of_week, levels=c("Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"))
+
+```
+
+## gettng rid of -ve values in ride length and "maintainance in HQ QR"
+```{r}
+trips_v2 <- trips_v2[!(trips_v2$start_station_name == "HQ QR" | trips_v2$ride_length_minutes <= 0), ]
+```
+
+## test
+```{r}
+head(trips_v2)
+```
+## grouping data for visualization
+```{r}
+famous_start_station_name <- trips_v2 %>% 
+  group_by(start_station_name) %>% 
+  summarise(total_rides_station= n()) %>%
+  arrange(desc(total_rides_station))
+```
+
+```{r}
+head(famous_start_station_name, 10)
+```
+
+```{r}
+famous_end_station_name <- trips_v2 %>% 
+  group_by(end_station_name) %>% 
+  summarise(total_rides_station= n()) %>%
+  arrange(desc(total_rides_station))
+```
+
+
+```{r}
+trips_v2$combined_station_name <- paste(trips_v2$start_station_name,"- ", trips_v2$end_station_name)
+```
+
+
+```{r}
+combined_station_25 <- trips_v2 %>% 
+  group_by(combined_station_name, member_casual) %>% 
+  summarise(famous_stations= n()) %>%
+  arrange(desc(famous_stations)) 
+  
+```
+
+```{r}
+write.csv(head(combined_station_25, 25), "D:/Downloads/combined_station_25.csv")
+```
+
+```{r}
+grouped_stations <- trips_v2 %>%
+  group_by(combined_station_name, start_lat, start_lng, end_lat, end_lng) %>%
+  summarise(Count =n()) %>%
+  arrange(desc(Count))
+```
+
+```{r}
+head(grouped_stations)
+```
+
+```{r}
+write.csv(head(grouped_stations,25), "D:/Downloads/grouped_stations.csv")
+```
+
+
+```{r}
+trips_v2 %>%
+  group_by(member_casual, rideable_type) %>%
+  summarise(Count =n()) %>%
+  arrange(desc(Count)) %>%
+  ggplot(aes(x = rideable_type, y = Count, fill = member_casual)) +
+  geom_col(position = "dodge")
+
+```
+### Docked Bike are the most famous and easier to find via smart phones mapping apps for members and casual, so __Docks__ are special bike racks that lock the bike, and only release it by software control. 
+```{r}
+ride_type <-trips_v2 %>%
+  group_by(member_casual, rideable_type) %>%
+  summarise(Count =n()) %>%
+  arrange(desc(Count))
+```
+
+```{r}
+write.csv(ride_type, "D:/Downloads/ride_type.csv")
 ```
 
