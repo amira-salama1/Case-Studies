@@ -19,7 +19,7 @@ Background on Data
 
 
 ## Viz
-Tableau Dashboard [Link](https://public.tableau.com/views/Cyclistic_GoogleDataAnalyticsCertificate/Dashboard1?:language=en-US&:display_count=n&:origin=viz_share_link
-)
+Tableau Dashboard [Link](https://public.tableau.com/views/Cyclistic_GoogleDataAnalyticsCertificate/Dashboard1?:language=en-US&:display_count=n&:origin=viz_share_link/?target=_blank
+) 
 
 
