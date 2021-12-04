@@ -18,8 +18,15 @@ Background on Data
 * Cyclistic is a fictional company, the historical trip data is in this [Link](https://divvy-tripdata.s3.amazonaws.com/index.html), this data set was part of the Case Study provided by Google Data Analytics certificate
 
 
+## Key Findings 
+
+* Casual Riders average ride length in minutes is about +3 times more than the members
+* Docked bikes are the most popular among riders also they are easier to find via smart phones mapping apps for members and casual
+* Summer months are the most blooming months for ride sharing business particularly May till August, further analysis shows a peak in average ride duration at the early morning that decreases throughout the day then rises again at night-time (at hour 23)
+* Popular stations are around the Chicago harbor area, specifically “Lake shore Dr & Monroe St.” , and “Streeter Dr & grand Ave”
+
+
+
 ## Viz
-Tableau Dashboard [Link](https://public.tableau.com/views/Cyclistic_GoogleDataAnalyticsCertificate/Dashboard1?:language=en-US&:display_count=n&:origin=viz_share_link/?target=_blank
-) 
-
-
+Tableau Dashboard 
+<a href="https://public.tableau.com/views/Cyclistic_GoogleDataAnalyticsCertificate/Dashboard1?:language=en-US&:display_count=n&:origin=viz_share_link" target="_blank">Link</a>
