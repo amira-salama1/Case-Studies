@@ -1,2 +1,2 @@
 # Case-Studies
-Case studies done with R &amp; python programming Languages
+Case studies done using R &amp; python programming Languages
